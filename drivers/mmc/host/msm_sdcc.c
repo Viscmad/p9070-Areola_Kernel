@@ -74,6 +74,7 @@
 #define SPS_MIN_XFER_SIZE		MCI_FIFOSIZE
 
 #define MSM_MMC_BUS_VOTING_DELAY	200 /* msecs */
+#define SUPPRESS_MMC_CAP_ERASE
 
 #if defined(CONFIG_DEBUG_FS)
 static void msmsdcc_dbg_createhost(struct msmsdcc_host *);
@@ -4814,7 +4815,11 @@ msmsdcc_probe(struct platform_device *pdev)
 	mmc->caps |= plat->mmc_bus_width;
 
 	mmc->caps |= MMC_CAP_MMC_HIGHSPEED | MMC_CAP_SD_HIGHSPEED;
-	mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY/* | MMC_CAP_ERASE*/;
+#ifndef SUPPRESS_MMC_CAP_ERASE 
+	mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY | MMC_CAP_ERASE;
+#else
+	mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY;
+#endif /* SUPPRESS_MMC_CAP_ERASE */
 
 	/*
 	 * If we send the CMD23 before multi block write/read command

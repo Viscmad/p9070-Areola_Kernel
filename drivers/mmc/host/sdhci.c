@@ -39,6 +39,7 @@
 #endif
 
 #define MAX_TUNING_LOOP 40
+#define SUPPRESS_MMC_CAP_ERASE
 
 static unsigned int debug_quirks = 0;
 
@@ -2501,7 +2502,11 @@ int sdhci_add_host(struct sdhci_host *host)
 	} else
 		mmc->f_min = host->max_clk / SDHCI_MAX_DIV_SPEC_200;
 
-	mmc->caps |= MMC_CAP_SDIO_IRQ /*| MMC_CAP_ERASE*/| MMC_CAP_CMD23;
+#ifndef SUPPRESS_MMC_CAP_ERASE
+		mmc->caps |= MMC_CAP_SDIO_IRQ | MMC_CAP_ERASE | MMC_CAP_CMD23;
+#else
+		mmc->caps |= MMC_CAP_SDIO_IRQ | MMC_CAP_CMD23;
+#endif /* SUPPRESS_MMC_CAP_ERASE */
 
 	if (host->quirks & SDHCI_QUIRK_MULTIBLOCK_READ_ACMD12)
 		host->flags |= SDHCI_AUTO_CMD12;

@@ -40,6 +40,12 @@
 #include "sd_ops.h"
 #include "sdio_ops.h"
 
+/**
+ * This define suppress MMC_ERASE function 
+ * and MMC_CAP_ERASE 
+ */
+#define SUPPRESS_MMC_CAP_ERASE
+
 static struct workqueue_struct *workqueue;
 
 #ifdef CONFIG_SKY_MMC
@@ -1540,77 +1546,79 @@ out:
  *
  * Caller must claim host before calling this function.
  */
+
 int mmc_erase(struct mmc_card *card, unsigned int from, unsigned int nr,
 	      unsigned int arg)
 {
-/* 
-    #if 0
-	unsigned int rem, to = from + nr;
+#ifndef SUPPRESS_MMC_CAP_ERASE
+   unsigned int rem, to = from + nr;
 
-	if (!(card->host->caps & MMC_CAP_ERASE) ||
-	    !(card->csd.cmdclass & CCC_ERASE))
-		return -EOPNOTSUPP;
+   if (!(card->host->caps & MMC_CAP_ERASE) ||
+       !(card->csd.cmdclass & CCC_ERASE))
+      return -EOPNOTSUPP;
 
-	if (!card->erase_size)
-		return -EOPNOTSUPP;
+   if (!card->erase_size)
+      return -EOPNOTSUPP;
 
-	if (mmc_card_sd(card) && arg != MMC_ERASE_ARG)
-		return -EOPNOTSUPP;
+   if (mmc_card_sd(card) && arg != MMC_ERASE_ARG)
+      return -EOPNOTSUPP;
 
-	if ((arg & MMC_SECURE_ARGS) &&
-	    !(card->ext_csd.sec_feature_support & EXT_CSD_SEC_ER_EN))
-		return -EOPNOTSUPP;
+   if ((arg & MMC_SECURE_ARGS) &&
+       !(card->ext_csd.sec_feature_support & EXT_CSD_SEC_ER_EN))
+      return -EOPNOTSUPP;
 
-	if ((arg & MMC_TRIM_ARGS) &&
-	    !(card->ext_csd.sec_feature_support & EXT_CSD_SEC_GB_CL_EN))
-		return -EOPNOTSUPP;
+   if ((arg & MMC_TRIM_ARGS) &&
+       !(card->ext_csd.sec_feature_support & EXT_CSD_SEC_GB_CL_EN))
+      return -EOPNOTSUPP;
 
-	if (arg == MMC_SECURE_ERASE_ARG) {
-		if (from % card->erase_size || nr % card->erase_size)
-			return -EINVAL;
-	}
+   if (arg == MMC_SECURE_ERASE_ARG) {
+      if (from % card->erase_size || nr % card->erase_size)
+         return -EINVAL;
+   }
 
-	if (arg == MMC_ERASE_ARG) {
-		rem = from % card->erase_size;
-		if (rem) {
-			rem = card->erase_size - rem;
-			from += rem;
-			if (nr > rem)
-				nr -= rem;
-			else
-				return 0;
-		}
-		rem = nr % card->erase_size;
-		if (rem)
-			nr -= rem;
-	}
+   if (arg == MMC_ERASE_ARG) {
+      rem = from % card->erase_size;
+      if (rem) {
+         rem = card->erase_size - rem;
+         from += rem;
+         if (nr > rem)
+            nr -= rem;
+         else
+            return 0;
+      }
+      rem = nr % card->erase_size;
+      if (rem)
+         nr -= rem;
+   }
 
-	if (nr == 0)
-		return 0;
+   if (nr == 0)
+      return 0;
 
-	to = from + nr;
+   to = from + nr;
 
-	if (to <= from)
-		return -EINVAL;
+   if (to <= from)
+      return -EINVAL;
 
-	/* 'from' and 'to' are inclusive */
-/*	to -= 1;
+   /* 'from' and 'to' are inclusive */
+   to -= 1;
 
-	return mmc_do_erase(card, from, to, arg);
-#else
-	return -EOPNOTSUPP;
-#endif
-*/
-return -EOPNOTSUPP;
+   return mmc_do_erase(card, from, to, arg);
+#else 
+
+   return -EOPNOTSUPP;
+
+#endif /* SUPPRESS_MMC_CAP_ERASE */
 }
 EXPORT_SYMBOL(mmc_erase);
 
 int mmc_can_erase(struct mmc_card *card)
 {
-/*	if ((card->host->caps & MMC_CAP_ERASE) &&
-	    (card->csd.cmdclass & CCC_ERASE) && card->erase_size)
-		return 1; */
-	return 0;
+#ifndef SUPPRESS_MMC_CAP_ERASE
+   if ((card->host->caps & MMC_CAP_ERASE) &&
+       (card->csd.cmdclass & CCC_ERASE) && card->erase_size)
+      return 1;
+#endif /* SUPPRESS_MMC_CAP_ERASE */
+   return 0;
 }
 EXPORT_SYMBOL(mmc_can_erase);
 
